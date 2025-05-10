@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Civil War Data Explorer</title>
+  <link rel="stylesheet" type="text/css"
+        href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    h1 { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+
+<h1>Civil War Data Explorer</h1>
+
+<table id="civilWarTable" class="display" style="width:100%"></table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script>
+  $(document).ready(function () {
+    Papa.parse("https://https://https://raw.githubusercontent.com/jtizzler/civil-war/refs/heads/main/Soldier%20Info%20-%20Sheet1.csv?token=GHSAT0AAAAAADDU3UWNPNL2XA3SJFCAXN5S2A7T2CA", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        const data = results.data;
+        const columns = Object.keys(data[0]).map(key => ({ title: key, data: key }));
+
+        $('#civilWarTable').DataTable({
+          data: data,
+          columns: columns
+        });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
