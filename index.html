@@ -21,7 +21,7 @@
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
   $(document).ready(function () {
-    Papa.parse("Solder Info - Sheet1.csv", {
+    Papa.parse("solders.csv", {
       download: true,
       header: true,
       complete: function(results) {
