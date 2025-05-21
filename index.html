@@ -1,31 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Civil War Data</title>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+  </style>
 </head>
 <body>
-  <h1>Civil War Soldiers</h1>
-  <input type="text" id="search" placeholder="Search by name...">
-  <div id="results"></div>
+  <h1>Civil War Records Search</h1>
+  <input type="text" id="search" placeholder="Search records..." />
+  <div id="results">Please enter a search query to display results.</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // let allData = [];
-
-    // Papa.parse('soldiers.csv', {
-    //   download: true,
-    //   header: true,
-    //   complete: function(results) {
-    //     allData = results.data;
-    //     // renderResults(allData);
-    //   }
-    // });
-
     let soldiersData = [];
     let unitsData = [];
     let joinedData = [];
 
+    // Load and parse both CSVs
     Papa.parse('soldiers.csv', {
       download: true,
       header: true,
@@ -45,64 +49,68 @@
     });
 
     function tryJoin() {
-      if (soldiersData.length === 0 || unitsData.length === 0) return;
+      if (!soldiersData.length || !unitsData.length) return;
 
-      // Index units by EnlistedNumber
       const unitMap = {};
       unitsData.forEach(unit => {
         const key = (unit.EnlistedNumber || '').trim();
         unitMap[key] = unit;
       });
 
-      // Join soldiers with thir unit info
-
       joinedData = soldiersData.map(soldier => {
         const key = (soldier.EnlistedNumber || '').trim();
-        const unit = unitMap[soldier.key] || {};
-        return { ...soldier, ...unit };
+        const unit = unitMap[key] || {};
+        const renamedUnit = {};
+        for (const k in unit) {
+          if (k !== 'EnlistedNumber') renamedUnit[`unit_${k}`] = unit[k];
+        }
+        return { ...soldier, ...renamedUnit };
       });
-
-      // Do not render on load (per previous request)
-      // renderResults(joinedData);
     }
-    
+
+    document.getElementById('search').addEventListener('input', function (e) {
+      const searchVal = e.target.value.toLowerCase();
+      const resultsDiv = document.getElementById('results');
+
+      if (!searchVal) {
+        resultsDiv.textContent = 'Please enter a search query to display results.';
+        return;
+      }
+
+      const filtered = joinedData.filter(row =>
+        Object.values(row).some(val =>
+          (val || '').toString().toLowerCase().includes(searchVal)
+        )
+      );
+
+      renderResults(filtered);
+    });
+
     function renderResults(data) {
       const container = document.getElementById('results');
       container.innerHTML = '';
-      // const resultsDiv = document.getElementById('results');
-      // resultsDiv.innerHTML = '';
 
-      if (data.length ===0) {
+      if (!data.length) {
         container.textContent = 'No results found.';
-        // resultsDiv.textContent = 'No results found.';
         return;
       }
 
       const table = document.createElement('table');
-      table.border = '1';
-
-      // Dynamically get all unique keys (from soldiers and units)
-      const allKeys = Objects.keys(data[0]);
-      // Header
       const thead = document.createElement('thead');
-      const headRow = document.createElement('tr');
+      const tbody = document.createElement('tbody');
+
+      const allKeys = Object.keys(data[0]);
+
+      // Table headers
+      const headerRow = document.createElement('tr');
       allKeys.forEach(key => {
         const th = document.createElement('th');
         th.textContent = key;
-        headRow.appendChild(th);
+        headerRow.appendChild(th);
       });
-      // const headerRow = document.createElement('tr');
+      thead.appendChild(headerRow);
 
-      // Create Header
-      // Object.keys(data[0]).forEach(key => {
-      //   const th = document.createElement('th');
-      //   th.textContent = key;
-      //   headerRow.appendChild(th);
-      // });
-      // table.appendChild(headerRow);
-
-      // Create Body
-      const tbody = document.createElement('tbody');
+      // Table rows
       data.forEach(row => {
         const tr = document.createElement('tr');
         allKeys.forEach(key => {
@@ -112,46 +120,11 @@
         });
         tbody.appendChild(tr);
       });
-      table.appendChild(tbody);
 
+      table.appendChild(thead);
+      table.appendChild(tbody);
       container.appendChild(table);
     }
-      
-      // Create Rows
-    //   data.forEach(row => {
-    //     const tr = document.createElement('tr');
-    //     Object.values(row).forEach(val => {
-    //       const td = document.createElement('td');
-    //       td.textContent = val;
-    //       tr.appendChild(td);
-    //     });
-    //     table.appendChild(tr);
-    //   });
-
-    //   resultsDiv.appendChild(table);
-    // }
-    //   data.forEach(row => {
-    //     const p = document.createElement('p');
-    //     p.textContent = JSON.stringify(row);
-    //     resultsDiv.appendChild(p);
-    //   });
-    // }
-
-    document.getElementById('search').addEventListener('input', function(e) {
-      const searchVal = e.target.value.toLowerCase();
-      if (!searchVal) {
-        // Show a placeholder message if the search box is empty
-        document.getElementById('results').textContent = 'Please enter a search query to display results.';
-        return;
-      }
-      const filtered = joinedData.filter (row =>
-      // const filtered = allData.filter(row =>
-        Object.values(row).some(
-          val => val && val.toLowerCase().includes(searchVal)
-        )
-      );
-      renderResults(filtered);
-    });
   </script>
 </body>
 </html>
