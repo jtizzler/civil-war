@@ -49,14 +49,16 @@
 
       // Index units by EnlistedNumber
       const unitMap = {};
-      unitsMap.forEach(unit => {
-        unitMap[unit.EnlistedNumber] = unit;
+      unitsData.forEach(unit => {
+        const key = (unit.EnlistedNumber || '').trim();
+        unitMap[key] = unit;
       });
 
       // Join soldiers with thir unit info
 
       joinedData = soldiersData.map(soldier => {
-        const unit = unitMap[soldier.EnlistedNumber] || {};
+        const key = (soldier.EnlistedNumber || '').trim();
+        const unit = unitMap[soldier.key] || {};
         return { ...soldier, ...unit };
       });
 
