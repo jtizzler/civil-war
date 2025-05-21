@@ -18,19 +18,50 @@
       header: true,
       complete: function(results) {
         allData = results.data;
-        renderResults(allData);
+        // renderResults(allData);
       }
     });
 
     function renderResults(data) {
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '';
-      data.forEach(row => {
-        const p = document.createElement('p');
-        p.textContent = JSON.stringify(row);
-        resultsDiv.appendChild(p);
+
+      if (data.length ===0) {
+        resultsDiv.textContent = 'No results found.';
+        return;
+      }
+
+      const table = document.createElement('table');
+      table.border = '1';
+      const headerRow = document.createElement('tr');
+
+      // Create Header
+      Object.keys(data[0]).forEach(key => {
+        const th = document.createElement('th');
+        th.textContent = key;
+        headerRow.appendChild(th);
       });
+      table.appendChild(headerRow);
+
+      // Create Rows
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        Object.values(row).forEach(val => {
+          const td = document.createElement('td');
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        table.appendChild(tr);
+      });
+
+      resultsDiv.appendChild(table);
     }
+    //   data.forEach(row => {
+    //     const p = document.createElement('p');
+    //     p.textContent = JSON.stringify(row);
+    //     resultsDiv.appendChild(p);
+    //   });
+    // }
 
     document.getElementById('search').addEventListener('input', function(e) {
       const searchVal = e.target.value.toLowerCase();
