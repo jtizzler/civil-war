@@ -65,6 +65,11 @@
 
     document.getElementById('search').addEventListener('input', function(e) {
       const searchVal = e.target.value.toLowerCase();
+      if (!searchVal) {
+        // Show a placeholder message if the search box is empty
+        document.getElementById('results').textContent = 'Please enter a search query to display results.';
+        return;
+      }
       const filtered = allData.filter(row =>
         Object.values(row).some(
           val => val && val.toLowerCase().includes(searchVal)
