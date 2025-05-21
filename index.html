@@ -67,39 +67,69 @@
     }
     
     function renderResults(data) {
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = '';
+      const container = document.getElementById('results');
+      container.innerHTML = '';
+      // const resultsDiv = document.getElementById('results');
+      // resultsDiv.innerHTML = '';
 
       if (data.length ===0) {
-        resultsDiv.textContent = 'No results found.';
+        container.textContent = 'No results found.';
+        // resultsDiv.textContent = 'No results found.';
         return;
       }
 
       const table = document.createElement('table');
       table.border = '1';
-      const headerRow = document.createElement('tr');
 
-      // Create Header
-      Object.keys(data[0]).forEach(key => {
+      // Dynamically get all unique keys (from soldiers and units)
+      const allKeys = Objects.keys(data[0]);
+      // Header
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      allKeys.forEach(key => {
         const th = document.createElement('th');
         th.textContent = key;
-        headerRow.appendChild(th);
+        headRow.appendChild(th);
       });
-      table.appendChild(headerRow);
+      // const headerRow = document.createElement('tr');
 
-      // Create Rows
+      // Create Header
+      // Object.keys(data[0]).forEach(key => {
+      //   const th = document.createElement('th');
+      //   th.textContent = key;
+      //   headerRow.appendChild(th);
+      // });
+      // table.appendChild(headerRow);
+
+      // Create Body
+      const tbody = document.createElement('tbody');
       data.forEach(row => {
         const tr = document.createElement('tr');
-        Object.values(row).forEach(val => {
+        allKeys.forEach(key => {
           const td = document.createElement('td');
-          td.textContent = val;
+          td.textContent = row[key] || '';
           tr.appendChild(td);
         });
-        table.appendChild(tr);
+        tbody.appendChild(tr);
       });
+      table.appendChild(tbody);
 
-      resultsDiv.appendChild(table);
+      container.appendChild(table);
     }
+      
+      // Create Rows
+    //   data.forEach(row => {
+    //     const tr = document.createElement('tr');
+    //     Object.values(row).forEach(val => {
+    //       const td = document.createElement('td');
+    //       td.textContent = val;
+    //       tr.appendChild(td);
+    //     });
+    //     table.appendChild(tr);
+    //   });
+
+    //   resultsDiv.appendChild(table);
+    // }
     //   data.forEach(row => {
     //     const p = document.createElement('p');
     //     p.textContent = JSON.stringify(row);
