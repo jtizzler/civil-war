@@ -11,17 +11,59 @@
 
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    let allData = [];
+    // let allData = [];
+
+    // Papa.parse('soldiers.csv', {
+    //   download: true,
+    //   header: true,
+    //   complete: function(results) {
+    //     allData = results.data;
+    //     // renderResults(allData);
+    //   }
+    // });
+
+    let soldiersData = [];
+    let unitsData = [];
+    let joinedData = [];
 
     Papa.parse('soldiers.csv', {
       download: true,
       header: true,
       complete: function(results) {
-        allData = results.data;
-        // renderResults(allData);
+        soldiersData = results.data;
+        tryJoin();
       }
     });
 
+    Papa.parse('units.csv', {
+      download: true,
+      header: true,
+      complete: function(results) {
+        unitsData = results.data;
+        tryJoin();
+      }
+    });
+
+    function tryJoin() {
+      if (soldierData.length === 0 || unitsData.length === 0) return;
+
+      // Index units by EnlistedNumber
+      const unitMap = {};
+      unitsMap.forEach(unit => {
+        unitMap[unit.EnlistedNumber] = unit;
+      });
+
+      // Join soldiers with thir unit info
+
+      joinedData = soldiersData.map(soldier => {
+        const unit = unitMap[soldier.EnlistedNumber] || {};
+        return { ...soldier, ...unit };
+      });
+
+      // Do not render on load (per previous request)
+      // renderResults(joinedData);
+    }
+    
     function renderResults(data) {
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '';
@@ -70,7 +112,8 @@
         document.getElementById('results').textContent = 'Please enter a search query to display results.';
         return;
       }
-      const filtered = allData.filter(row =>
+      const filtered = joinedData.filter (row =>
+      // const filtered = allData.filter(row =>
         Object.values(row).some(
           val => val && val.toLowerCase().includes(searchVal)
         )
