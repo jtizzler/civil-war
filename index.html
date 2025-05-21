@@ -21,7 +21,11 @@
 </head>
 <body>
   <h1>Civil War Records Search</h1>
-  <input type="text" id="search" placeholder="Search records..." />
+<!--   <input type="text" id="search" placeholder="Search records..." /> -->
+  <form id="search-form">
+    <input type="text" id="search" placeholder="Search records..." />
+    <button type="submit">Search</button>
+  </form>
   <div id="results">Please enter a search query to display results.</div>
 
   <script>
@@ -68,9 +72,13 @@
       });
     }
 
-    document.getElementById('search').addEventListener('input', function (e) {
-      const searchVal = e.target.value.toLowerCase();
+    // document.getElementById('search').addEventListener('input', function (e) {
+    document.getElementByID('search-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const searchVal = document.getElementById('search').value.toLowerCase();
       const resultsDiv = document.getElementById('results');
+      // const searchVal = e.target.value.toLowerCase();
+      // const resultsDiv = document.getElementById('results');
 
       if (!searchVal) {
         resultsDiv.textContent = 'Please enter a search query to display results.';
