@@ -1,41 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Civil War Data Explorer</title>
-  <link rel="stylesheet" type="text/css"
-        href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Civil War Data</title>
 </head>
 <body>
+  <h1>Civil War Soldiers</h1>
+  <input type="text" id="search" placeholder="Search by name...">
+  <div id="results"></div>
 
-<h1>Civil War Data Explorer</h1>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    let allData = [];
 
-<table id="civilWarTable" class="display" style="width:100%"></table>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-<script>
-  $(document).ready(function () {
-    Papa.parse("solders.csv", {
+    Papa.parse('soldiers.csv', {
       download: true,
       header: true,
       complete: function(results) {
-        const data = results.data;
-        const columns = Object.keys(data[0]).map(key => ({ title: key, data: key }));
-
-        $('#civilWarTable').DataTable({
-          data: data,
-          columns: columns
-        });
+        allData = results.data;
+        renderResults(allData);
       }
     });
-  });
-</script>
 
+    function renderResults(data) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      data.forEach(row => {
+        const p = document.createElement('p');
+        p.textContent = JSON.stringify(row);
+        resultsDiv.appendChild(p);
+      });
+    }
+
+    document.getElementById('search').addEventListener('input', function(e) {
+      const searchVal = e.target.value.toLowerCase();
+      const filtered = allData.filter(row =>
+        Object.values(row).some(
+          val => val && val.toLowerCase().includes(searchVal)
+        )
+      );
+      renderResults(filtered);
+    });
+  </script>
 </body>
 </html>
