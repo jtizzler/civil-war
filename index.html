@@ -85,7 +85,7 @@
       formData.forEach((value, key) => newEntry[key] = value);
 
       try {
-        const response = await fetch("YOUR_API_GATEWAY_ENDPOINT", {
+        const response = await fetch("https://olbmovl6t0.execute-api.us-east-1.amazonaws.com/post-updates-from-git-form-entry", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
