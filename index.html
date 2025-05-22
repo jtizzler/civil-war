@@ -1,121 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Civil War Soldier Search</title>
+  <meta charset="UTF-8">
+  <title>Civil War Soldiers</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 4px;
-      text-align: left;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    input {
-      margin-bottom: 10px;
-    }
+    table, th, td { border: 1px solid black; border-collapse: collapse; padding: 6px; }
+    th { background-color: #f2f2f2; }
   </style>
 </head>
 <body>
-  <h1>Civil War Soldier Search</h1>
-  <input type="text" id="search" placeholder="Search by name, birth, death..." />
+  <h1>Civil War Soldiers</h1>
 
+  <input type="text" id="searchInput" placeholder="Search by Soldier name">
+  <button onclick="search()">Search</button>
+
+  <br><br>
   <table id="resultsTable">
-    <thead></thead>
+    <thead>
+      <tr>
+        <th>Soldier</th>
+        <th>Born</th>
+        <th>Died</th>
+        <th>EnlistedNumber</th>
+      </tr>
+    </thead>
     <tbody></tbody>
   </table>
 
+  <hr>
   <h2>Add New Soldier</h2>
-  <form id="entry-form">
-    <input name="Soldier" placeholder="Soldier Name" required />
-    <input name="Born" placeholder="Birth Date" required />
-    <input name="Died" placeholder="Death Date" required />
-    <input name="EnlistedNumber" placeholder="EnlistedNumber" />
+  <form id="soldierForm">
+    <label>Soldier: <input type="text" name="Soldier" required></label><br>
+    <label>Born: <input type="text" name="Born"></label><br>
+    <label>Died: <input type="text" name="Died"></label><br>
+    <label>EnlistedNumber: <input type="text" name="EnlistedNumber" required></label><br>
     <button type="submit">Submit</button>
   </form>
 
-  <script>
-    async function loadCSV() {
-      const response = await fetch('soldiers.csv');
-      const csv = await response.text();
+  <p id="submitMessage"></p>
 
-      Papa.parse(csv, {
+  <script>
+    let soldiersData = [];
+
+    function loadData() {
+      Papa.parse("https://civil-war-for-git-project.s3.amazonaws.com/soldiers.csv", {
+        download: true,
         header: true,
-        skipEmptyLines: true,
         complete: function(results) {
-          window.originalData = results.data;
-          renderTable([]);
+          soldiersData = results.data;
+          renderTable(soldiersData);
         }
       });
     }
 
     function renderTable(data) {
-      const tableHead = document.querySelector("#resultsTable thead");
-      const tableBody = document.querySelector("#resultsTable tbody");
-
-      tableHead.innerHTML = '';
-      tableBody.innerHTML = '';
-
-      if (data.length === 0) {
-        return;
-      }
-
-      const headers = Object.keys(data[0]);
-      const headRow = document.createElement("tr");
-      headers.forEach(header => {
-        const th = document.createElement("th");
-        th.textContent = header;
-        headRow.appendChild(th);
-      });
-      tableHead.appendChild(headRow);
-
+      const tbody = document.querySelector("#resultsTable tbody");
+      tbody.innerHTML = "";
       data.forEach(row => {
-        const tr = document.createElement("tr");
-        headers.forEach(header => {
-          const td = document.createElement("td");
-          td.textContent = row[header];
-          tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
+        if (row.Soldier) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${row.Soldier}</td>
+            <td>${row.Born}</td>
+            <td>${row.Died}</td>
+            <td>${row.EnlistedNumber}</td>
+          `;
+          tbody.appendChild(tr);
+        }
       });
     }
 
-    document.getElementById('search').addEventListener('input', function(e) {
-      const query = e.target.value.toLowerCase();
-      if (query.trim() === '') {
-        renderTable([]); // Don't show full dataset again
-        return;
-      }
-
-      const filtered = window.originalData.filter(row =>
-        Object.values(row).some(val => val.toLowerCase().includes(query))
-      );
+    function search() {
+      const query = document.getElementById("searchInput").value.trim().toLowerCase();
+      const filtered = soldiersData.filter(row => row.Soldier && row.Soldier.toLowerCase().includes(query));
       renderTable(filtered);
-    });
+    }
 
-    document.getElementById('entry-form').addEventListener('submit', async function(e) {
+    document.getElementById("soldierForm").addEventListener("submit", async function(e) {
       e.preventDefault();
+
       const formData = new FormData(e.target);
-      const payload = Object.fromEntries(formData.entries());
+      const newEntry = {};
+      formData.forEach((value, key) => newEntry[key] = value);
 
-      const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com/post-updates-from-git-form-entry', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      try {
+        const response = await fetch("YOUR_API_GATEWAY_ENDPOINT", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(newEntry)
+        });
 
-      const result = await res.json();
-      alert(result.message || result.error);
-      e.target.reset();
+        if (response.ok) {
+          document.getElementById("submitMessage").textContent = "Soldier added successfully!";
+          e.target.reset();
+          loadData(); // Refresh table
+        } else {
+          document.getElementById("submitMessage").textContent = "Failed to submit soldier.";
+        }
+      } catch (error) {
+        document.getElementById("submitMessage").textContent = "Error submitting: " + error.message;
+      }
     });
 
-    loadCSV();
+    // Load data on page load
+    loadData();
   </script>
 </body>
 </html>
