@@ -134,5 +134,30 @@
       container.appendChild(table);
     }
   </script>
+  <h2>Add New Solder</h2>
+  <form id="entry-form">
+    <input name="Solder" placeholder="Solder" required />
+    <input name="Born" placeholder="1700-01-01" required />
+    <input name="Died" placeholder="1700-01-01" required />
+    <input name="EnlistedNumber" placeholder="Enlisted Number" required />
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    document.getElementById('entry-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+
+      const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      alert(result.message || result.error);
+    });
+  </script>
 </body>
 </html>
