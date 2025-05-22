@@ -2,162 +2,120 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Civil War Data</title>
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <title>Civil War Soldier Search</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
     table {
       border-collapse: collapse;
       width: 100%;
     }
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      border: 1px solid #ccc;
+      padding: 4px;
+      text-align: left;
     }
     th {
       background-color: #f2f2f2;
     }
+    input {
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>Civil War Records Search</h1>
-<!--   <input type="text" id="search" placeholder="Search records..." /> -->
-  <form id="search-form">
-    <input type="text" id="search" placeholder="Search records..." />
-    <button type="submit">Search</button>
-  </form>
-  <div id="results">Please enter a search query to display results.</div>
+  <h1>Civil War Soldier Search</h1>
+  <input type="text" id="search" placeholder="Search by name, birth, death..." />
 
-  <script>
-    let soldiersData = [];
-    let unitsData = [];
-    let joinedData = [];
+  <table id="resultsTable">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
 
-    // Load and parse both CSVs
-    Papa.parse('soldiers.csv', {
-      download: true,
-      header: true,
-      complete: function(results) {
-        soldiersData = results.data;
-        tryJoin();
-      }
-    });
-
-    Papa.parse('units.csv', {
-      download: true,
-      header: true,
-      complete: function(results) {
-        unitsData = results.data;
-        tryJoin();
-      }
-    });
-
-    function tryJoin() {
-      if (!soldiersData.length || !unitsData.length) return;
-
-      const unitMap = {};
-      unitsData.forEach(unit => {
-        const key = (unit.EnlistedNumber || '').trim();
-        unitMap[key] = unit;
-      });
-
-      joinedData = soldiersData.map(soldier => {
-        const key = (soldier.EnlistedNumber || '').trim();
-        const unit = unitMap[key] || {};
-        const renamedUnit = {};
-        for (const k in unit) {
-          if (k !== 'EnlistedNumber') renamedUnit[`unit_${k}`] = unit[k];
-        }
-        return { ...soldier, ...renamedUnit };
-      });
-    }
-
-    // document.getElementById('search').addEventListener('input', function (e) {
-    document.getElementById('search-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      const searchVal = document.getElementById('search').value.toLowerCase();
-      const resultsDiv = document.getElementById('results');
-      // const searchVal = e.target.value.toLowerCase();
-      // const resultsDiv = document.getElementById('results');
-
-      if (!searchVal) {
-        resultsDiv.textContent = 'Please enter a search query to display results.';
-        return;
-      }
-
-      const filtered = joinedData.filter(row =>
-        Object.values(row).some(val =>
-          (val || '').toString().toLowerCase().includes(searchVal)
-        )
-      );
-
-      renderResults(filtered);
-    });
-
-    function renderResults(data) {
-      const container = document.getElementById('results');
-      container.innerHTML = '';
-
-      if (!data.length) {
-        container.textContent = 'No results found.';
-        return;
-      }
-
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const tbody = document.createElement('tbody');
-
-      const allKeys = Object.keys(data[0]);
-
-      // Table headers
-      const headerRow = document.createElement('tr');
-      allKeys.forEach(key => {
-        const th = document.createElement('th');
-        th.textContent = key;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-
-      // Table rows
-      data.forEach(row => {
-        const tr = document.createElement('tr');
-        allKeys.forEach(key => {
-          const td = document.createElement('td');
-          td.textContent = row[key] || '';
-          tr.appendChild(td);
-        });
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      container.appendChild(table);
-    }
-  </script>
-  <h2>Add New Solder</h2>
+  <h2>Add New Soldier</h2>
   <form id="entry-form">
-    <input name="Solder" placeholder="Solder" required />
-    <input name="Born" placeholder="1700-01-01" required />
-    <input name="Died" placeholder="1700-01-01" required />
-    <input name="EnlistedNumber" placeholder="Enlisted Number" required />
+    <input name="Soldier" placeholder="Soldier Name" required />
+    <input name="Born" placeholder="Birth Date" required />
+    <input name="Died" placeholder="Death Date" required />
+    <input name="EnlistedNumber" placeholder="EnlistedNumber" />
     <button type="submit">Submit</button>
   </form>
 
   <script>
-  document.getElementById('entry-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const payload = Object.fromEntries(formData.entries());
+    async function loadCSV() {
+      const response = await fetch('soldiers.csv');
+      const csv = await response.text();
 
-    const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com/submit', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload)
+      Papa.parse(csv, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          window.originalData = results.data;
+          renderTable([]);
+        }
+      });
+    }
+
+    function renderTable(data) {
+      const tableHead = document.querySelector("#resultsTable thead");
+      const tableBody = document.querySelector("#resultsTable tbody");
+
+      tableHead.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      if (data.length === 0) {
+        return;
+      }
+
+      const headers = Object.keys(data[0]);
+      const headRow = document.createElement("tr");
+      headers.forEach(header => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        headRow.appendChild(th);
+      });
+      tableHead.appendChild(headRow);
+
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+        headers.forEach(header => {
+          const td = document.createElement("td");
+          td.textContent = row[header];
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('search').addEventListener('input', function(e) {
+      const query = e.target.value.toLowerCase();
+      if (query.trim() === '') {
+        renderTable([]); // Don't show full dataset again
+        return;
+      }
+
+      const filtered = window.originalData.filter(row =>
+        Object.values(row).some(val => val.toLowerCase().includes(query))
+      );
+      renderTable(filtered);
     });
 
-    const result = await res.json();
-    alert(result.message || result.error);
-  });
-</script>
+    document.getElementById('entry-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const payload = Object.fromEntries(formData.entries());
+
+      const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+      alert(result.message || result.error);
+      e.target.reset();
+    });
+
+    loadCSV();
+  </script>
 </body>
 </html>
