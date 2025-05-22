@@ -149,7 +149,7 @@
     const formData = new FormData(e.target);
     const payload = Object.fromEntries(formData.entries());
 
-    const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com', {
+    const res = await fetch('https://olbmovl6t0.execute-api.us-east-1.amazonaws.com/submit', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(payload)
